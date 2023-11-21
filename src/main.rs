@@ -3,11 +3,11 @@ use std::net::{TcpListener, TcpStream};
 
 fn handle_connection(mut stream: TcpStream) {
     let mut buf: Vec<u8> = Vec::new();
-    let _request_bytes = stream.read_to_end(&mut buf);
-
+    let _request_bytes = stream.read(&mut buf);
+    
     match stream.write_all(b"HTTP/1.1 200 OK\r\n\r\n") {
         Ok(_) => (),
-        Err(e) => println!("Error in handle connection: {}", e),
+        Err(e) => println!("error: {}", e),
     }
 }
 

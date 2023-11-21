@@ -1,13 +1,28 @@
 use std::io::Write;
 use std::net::{TcpListener, TcpStream};
 
+use itertools::Itertools;
+
+const OK_RESPONSE: &[u8] = b"HTTP/1.1 200 OK\r\n\r\n";
+const NOT_FOUND_RESPONSE: &[u8] = b"HTTP/1.1 404 Not Found\r\n\r\n";
+
 fn handle_connection(mut stream: TcpStream) {
-    // let mut buf: Vec<u8> = Vec::new();
-    // let _request_bytes = stream.read(&mut buf);
-    
-    match stream.write_all(b"HTTP/1.1 200 OK\r\n\r\n") {
-        Ok(_) => (),
-        Err(e) => println!("error: {}", e),
+    let buf: Vec<u8> = Vec::new();
+    let request_str = String::from_utf8_lossy(&buf);
+    let request_lines: Vec<&str> = request_str.split("\r\n").collect();
+    let start_line = request_lines[0];
+    let start_parts: Vec<&str> = start_line.split(" ").collect();
+    let path = start_parts[1];
+
+    match path {
+        "/" => match stream.write_all(OK_RESPONSE) {
+            Ok(_) => (),
+            Err(e) => println!("error: {}", e),
+        },
+        _ => match stream.write_all(NOT_FOUND_RESPONSE) {
+            Ok(_) => (),
+            Err(e) => println!("error: {}", e),
+        },
     }
 }
 

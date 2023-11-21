@@ -1,8 +1,6 @@
 use std::io::Write;
 use std::net::{TcpListener, TcpStream};
 
-use itertools::Itertools;
-
 const OK_RESPONSE: &[u8] = b"HTTP/1.1 200 OK\r\n\r\n";
 const NOT_FOUND_RESPONSE: &[u8] = b"HTTP/1.1 404 Not Found\r\n\r\n";
 
@@ -17,11 +15,11 @@ fn handle_connection(mut stream: TcpStream) {
     match path {
         "/" => match stream.write_all(OK_RESPONSE) {
             Ok(_) => (),
-            Err(e) => println!("error: {}", e),
+            Err(e) => println!("Error on ok response: {}", e),
         },
         _ => match stream.write_all(NOT_FOUND_RESPONSE) {
             Ok(_) => (),
-            Err(e) => println!("error: {}", e),
+            Err(e) => println!("Error on not found response: {}", e),
         },
     }
 }
@@ -36,7 +34,7 @@ fn main() {
                 handle_connection(stream)
             }
             Err(e) => {
-                println!("error: {}", e);
+                println!("Error on tcp stream: {}", e);
             }
         }
     }

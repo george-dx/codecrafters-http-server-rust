@@ -1,9 +1,9 @@
-use std::io::{Read, Write};
+use std::io::Write;
 use std::net::{TcpListener, TcpStream};
 
 fn handle_connection(mut stream: TcpStream) {
-    let mut buf: Vec<u8> = Vec::new();
-    let _request_bytes = stream.read(&mut buf);
+    // let mut buf: Vec<u8> = Vec::new();
+    // let _request_bytes = stream.read(&mut buf);
     
     match stream.write_all(b"HTTP/1.1 200 OK\r\n\r\n") {
         Ok(_) => (),

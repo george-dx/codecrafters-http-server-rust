@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::io::Write;
 use std::net::{TcpListener, TcpStream};
 
@@ -8,12 +9,12 @@ fn handle_connection(mut stream: TcpStream) {
     let buf: Vec<u8> = Vec::new();
     let request_str = String::from_utf8_lossy(&buf);
     let request_lines: Vec<&str> = request_str.split("\r\n").collect();
-    let start_line = request_lines[0];
-    let start_parts: Vec<&str> = start_line.split(" ").collect();
-    let path = start_parts[1];
+    let start_line = request_lines.get(0).unwrap_or(&"Missing starting line");
+    let start_line_parts: Vec<&str> = start_line.split(" ").collect();
+    let path = start_line_parts.get(1).unwrap_or(&"Missing start part get path");
 
     match path {
-        "/" => match stream.write_all(OK_RESPONSE) {
+        &"/" => match stream.write_all(OK_RESPONSE) {
             Ok(_) => (),
             Err(e) => println!("Error on ok response: {}", e),
         },

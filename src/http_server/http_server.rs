@@ -9,17 +9,18 @@ const OK_RESPONSE: &[u8] = b"HTTP/1.1 200 OK\r\n\r\n";
 const NOT_FOUND_RESPONSE: &[u8] = b"HTTP/1.1 404 Not Found\r\n\r\n";
 
 pub struct HttpServer {
-    address: String,
+    ip_addr: String,
     port: u16,
 }
 
 impl HttpServer {
-    pub fn new(address: String, port: u16) -> Self {
-        Self { address, port }
+    pub fn new(ip_addr: String, port: u16) -> Self {
+        Self { ip_addr, port }
     }
 
     pub fn listen(&self) {
-        let listener = TcpListener::bind("127.0.0.1:4221").unwrap();
+        let address = format!("{}:{}", self.ip_addr, self.port);
+        let listener = TcpListener::bind(address).unwrap();
 
         for stream in listener.incoming() {
             match stream {

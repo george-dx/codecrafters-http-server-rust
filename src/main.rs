@@ -15,11 +15,20 @@ fn handle_connection(mut stream: TcpStream) {
     let start_line = request_lines.get(0).unwrap_or(&"Missing starting line");
     let start_line_parts: Vec<&str> = start_line.split(' ').collect();
     let path = start_line_parts.get(1).unwrap_or(&"Missing start part get path");
-
+    
+    let parts: Vec<&str> =  path.split("/echo/").collect();
+    println!("{:?}", parts);
     match path {
         &"/" => match stream.write(OK_RESPONSE) {
             Ok(_) => (),
             Err(e) => println!("Error on ok response: {}", e),
+        },
+        path if path.starts_with("/echo/") => {
+            let echo_message_parts: Vec<&str> = path.split("/echo/").collect();
+            let echo_message = echo_message_parts.get(1).unwrap();
+            println!("{:?}", echo_message);
+            let response = format!("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {}\r\n\r\n{}", echo_message.len(),echo_message);
+            let _ = stream.write(response.as_bytes()).unwrap();
         },
         _ => match stream.write(NOT_FOUND_RESPONSE) {
             Ok(_) => (),

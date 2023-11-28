@@ -26,7 +26,7 @@ impl HttpServer {
             match stream {
                 Ok(stream) => {
                     println!("accepted new connection");
-                    self.handle_connection(stream)
+                    self.handle_request(stream)
                 }
                 Err(e) => {
                     println!("Error on tcp stream: {}", e);
@@ -35,7 +35,7 @@ impl HttpServer {
         }
     }
 
-    fn handle_connection(&self, mut stream: TcpStream) {
+    fn handle_request(&self, mut stream: TcpStream) {
         let mut buffer = [0; 4096];
         let _request_bytes = stream.read(&mut buffer).unwrap();
         let request_str = String::from_utf8_lossy(&buffer);
@@ -49,6 +49,10 @@ impl HttpServer {
 
         let parts: Vec<&str> = path.split("/echo/").collect();
         println!("{:?}", parts);
+        self.handle_response(path, stream);
+    }
+
+    fn handle_response(&self, path: &&str, mut stream: TcpStream) {
         match path {
             &"/" => match stream.write(OK_RESPONSE) {
                 Ok(_) => (),

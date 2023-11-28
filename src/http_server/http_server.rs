@@ -40,7 +40,11 @@ impl HttpServer {
         let _request_bytes = stream.read(&mut buffer).unwrap();
         let request_str = String::from_utf8_lossy(&buffer);
         let request_lines: Vec<&str> = request_str.split("\r\n").collect_vec();
-        println!("Requested lines: {:?}", request_lines);
+        // println!("Requested lines: {:?}", request_lines);
+        self.handle_response(request_lines, stream);
+    }
+
+    fn handle_response(&self, request_lines: Vec<&str>, mut stream: TcpStream) {
         let start_line = request_lines.get(0).unwrap_or(&"Missing starting line");
         let start_line_parts: Vec<&str> = start_line.split(' ').collect();
         let path = start_line_parts
@@ -49,10 +53,6 @@ impl HttpServer {
 
         let parts: Vec<&str> = path.split("/echo/").collect();
         println!("{:?}", parts);
-        self.handle_response(path, stream);
-    }
-
-    fn handle_response(&self, path: &&str, mut stream: TcpStream) {
         match path {
             &"/" => match stream.write(OK_RESPONSE) {
                 Ok(_) => (),
@@ -65,6 +65,21 @@ impl HttpServer {
                     "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {}\r\n\r\n{}",
                     echo_message.len(),
                     echo_message
+                );
+                let _ = stream.write(response.as_bytes()).unwrap();
+            }
+            path if path.starts_with("/user-agent") => {
+                let mut user_agent_line = String::new();
+                for element in request_lines {
+                    if element.contains(&"User-Agent") {
+                        user_agent_line = element.to_string();
+                    }
+                }
+                let user_agent: Vec<&str> = user_agent_line.split(": ").collect();
+                let response = format!(
+                    "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {}\r\n\r\n{}\r\n",
+                    user_agent.get(1).expect("Missing user agent").len(),
+                    user_agent.get(1).expect("Missing user agent")
                 );
                 let _ = stream.write(response.as_bytes()).unwrap();
             }

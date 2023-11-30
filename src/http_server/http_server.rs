@@ -1,5 +1,5 @@
 use std::{
-    io::{Read, Write},
+    io::{BufRead, BufReader, Read, Write},
     net::{TcpListener, TcpStream},
 };
 
@@ -35,17 +35,27 @@ impl HttpServer {
         }
     }
 
-    fn handle_request(&self, mut stream: TcpStream) {
+    fn _handle_request_deprecated(&self, mut stream: TcpStream) {
         let mut buffer = [0; 4096];
-        let _request_bytes = stream.read(&mut buffer).unwrap();
+        let request_bytes = stream.read(&mut buffer).unwrap();
         let request_str = String::from_utf8_lossy(&buffer);
-        let request_lines: Vec<&str> = request_str.split("\r\n").collect_vec();
-        // println!("Requested lines: {:?}", request_lines);
-        self.handle_response(request_lines, stream);
+        let _request_lines: Vec<&str> = request_str.split("\r\n").collect_vec();
+        println!("Requested lines: {:?}", request_bytes);
     }
 
-    fn handle_response(&self, request_lines: Vec<&str>, mut stream: TcpStream) {
-        let start_line = request_lines.get(0).unwrap_or(&"Missing starting line");
+    fn handle_request(&self, mut stream: TcpStream) {
+        let buffer: BufReader<&mut TcpStream> = BufReader::new(&mut stream);
+        let request_bytes: Vec<String> = buffer
+            .lines()
+            .map(|result| result.unwrap())
+            .take_while(|line| !line.is_empty())
+            .collect_vec();
+        // println!("Requested lines: {:?}", request_bytes);
+        self.handle_response(request_bytes, stream);
+    }
+
+    fn handle_response(&self, request_lines: Vec<String>, mut stream: TcpStream) {
+        let start_line = request_lines.get(0).expect("Missing first line");
         let start_line_parts: Vec<&str> = start_line.split(' ').collect();
         let path = start_line_parts
             .get(1)

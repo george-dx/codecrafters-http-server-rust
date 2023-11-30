@@ -64,7 +64,7 @@ impl HttpServer {
         let parts: Vec<&str> = path.split("/echo/").collect();
         println!("{:?}", parts);
         match path {
-            &"/" => match stream.write(OK_RESPONSE) {
+            &"/" => match stream.write_all(OK_RESPONSE) {
                 Ok(_) => (),
                 Err(e) => println!("Error on ok response: {}", e),
             },
@@ -76,7 +76,7 @@ impl HttpServer {
                     echo_message.len(),
                     echo_message
                 );
-                let _ = stream.write(response.as_bytes()).unwrap();
+                let _ = stream.write_all(response.as_bytes()).unwrap();
             }
             path if path.starts_with("/user-agent") => {
                 let mut user_agent_line = String::new();
@@ -91,9 +91,9 @@ impl HttpServer {
                     user_agent.get(1).expect("Missing user agent").len(),
                     user_agent.get(1).expect("Missing user agent")
                 );
-                let _ = stream.write(response.as_bytes()).unwrap();
+                let _ = stream.write_all(response.as_bytes()).unwrap();
             }
-            _ => match stream.write(NOT_FOUND_RESPONSE) {
+            _ => match stream.write_all(NOT_FOUND_RESPONSE) {
                 Ok(_) => (),
                 Err(e) => println!("Error on not found response: {}", e),
             },

@@ -1,9 +1,7 @@
 use std::{
     io::{BufRead, BufReader, Read, Write},
-    net::{TcpListener, TcpStream}, thread::{self, Thread, JoinHandle}
+    net::{TcpListener, TcpStream}, thread
 };
-
-
 use itertools::Itertools;
 
 const OK_RESPONSE: &[u8] = b"HTTP/1.1 200 OK\r\n\r\n";
@@ -14,43 +12,6 @@ pub struct HttpServer {
     port: u16,
 }
 
-struct Worker {
-    id: usize,
-    thread: thread::JoinHandle<()>,
-}
-
-impl Worker {
-    fn new(id: usize) -> Worker {
-        let thread = thread::spawn(|| {});
-        Worker {id, thread}
-    }
-}
-
-pub struct ThreadPool {
-    workers: Vec<Worker>,
-}
-
-impl ThreadPool {
-    pub fn new(size: usize) -> ThreadPool {
-        assert!(size > 0);
-
-        let mut workers = Vec::with_capacity(size);
-        for id in 0..size {
-            workers.push(Worker::new(id));
-        }
-
-        ThreadPool { workers }
-    }
-
-    pub fn execute<F>(&self, f: F)
-    where
-        F: FnOnce() + Send + 'static,
-    {
-        let job = Box::new(f);
-    }
-
-}
-
 impl HttpServer {
     pub fn new(ip_addr: String, port: u16) -> Self {
         Self { ip_addr, port }
@@ -59,13 +20,12 @@ impl HttpServer {
     pub fn listen(&self) {
         let address = format!("{}:{}", self.ip_addr, self.port);
         let listener = TcpListener::bind(address).unwrap();
-        let pool = ThreadPool::new(4);
 
         for stream in listener.incoming() {
             match stream {
                 Ok(stream) => {
                     println!("accepted new connection");
-                    pool.execute(|| handle_request(stream));
+                    thread::spawn(move || handle_request(stream));
                 }
                 Err(e) => {
                     println!("Error on tcp stream: {}", e);

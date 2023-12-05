@@ -1,8 +1,9 @@
+use itertools::Itertools;
 use std::{
     io::{BufRead, BufReader, Read, Write},
-    net::{TcpListener, TcpStream}, thread
+    net::{TcpListener, TcpStream},
+    thread,
 };
-use itertools::Itertools;
 
 const OK_RESPONSE: &[u8] = b"HTTP/1.1 200 OK\r\n\r\n";
 const NOT_FOUND_RESPONSE: &[u8] = b"HTTP/1.1 404 Not Found\r\n\r\n";
@@ -41,7 +42,6 @@ impl HttpServer {
         let _request_lines: Vec<&str> = request_str.split("\r\n").collect_vec();
         println!("Requested lines: {:?}", request_bytes);
     }
-
 }
 
 fn handle_request(mut stream: TcpStream) {

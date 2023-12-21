@@ -34,14 +34,6 @@ impl HttpServer {
             }
         }
     }
-
-    fn _handle_request_deprecated(&self, mut stream: TcpStream) {
-        let mut buffer = [0; 4096];
-        let request_bytes = stream.read(&mut buffer).unwrap();
-        let request_str = String::from_utf8_lossy(&buffer);
-        let _request_lines: Vec<&str> = request_str.split("\r\n").collect_vec();
-        println!("Requested lines: {:?}", request_bytes);
-    }
 }
 
 fn handle_request(mut stream: TcpStream) {

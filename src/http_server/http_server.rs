@@ -3,6 +3,7 @@ use std::{
     io::{BufRead, BufReader, Write},
     net::{TcpListener, TcpStream},
     thread,
+    fs
 };
 
 const OK_RESPONSE: &[u8] = b"HTTP/1.1 200 OK\r\n\r\n";
@@ -85,6 +86,20 @@ fn handle_response(request_lines: Vec<String>, mut stream: TcpStream) {
                 user_agent.get(1).expect("Missing user agent")
             );
             let _ = stream.write_all(response.as_bytes()).unwrap();
+        }
+        path if path.starts_with("/files/") => {
+            let message_parts: Vec<&str> = path.split("/files/").collect();
+            let file_name = message_parts.get(1).unwrap_or(&"Missing file name");
+            let paths = fs::read_dir("").unwrap();
+            for path in paths {
+                if String::from(*file_name) == path.unwrap().path().display().to_string(){
+                    let response = format!(
+                        "HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: {}\r\n\r\n",
+                        message_parts.len(),
+                    );
+                    stream.write_all(response.as_bytes());
+                }
+            }
         }
         _ => match stream.write_all(NOT_FOUND_RESPONSE) {
             Ok(_) => (),

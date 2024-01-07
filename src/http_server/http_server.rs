@@ -1,9 +1,10 @@
 use itertools::Itertools;
 use std::{
+    env, fs,
     io::{BufRead, BufReader, Write},
     net::{TcpListener, TcpStream},
+    path::Path,
     thread,
-    fs
 };
 
 const OK_RESPONSE: &[u8] = b"HTTP/1.1 200 OK\r\n\r\n";
@@ -88,17 +89,40 @@ fn handle_response(request_lines: Vec<String>, mut stream: TcpStream) {
             let _ = stream.write_all(response.as_bytes()).unwrap();
         }
         path if path.starts_with("/files/") => {
+            let cmd_args: Vec<String> = env::args().collect();
+            let directory_path = &cmd_args[2];
+            let dir = fs::read_dir(directory_path).expect("Could not read the directory");
+            // let paths = fs::read_dir(directory_path).expect("Could not read the directory");
             let message_parts: Vec<&str> = path.split("/files/").collect();
-            let file_name = message_parts.get(1).unwrap_or(&"Missing file name");
-            let paths = fs::read_dir("").unwrap();
-            for path in paths {
-                if String::from(*file_name) == path.unwrap().path().display().to_string(){
-                    let response = format!(
-                        "HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: {}\r\n\r\n",
-                        message_parts.len(),
-                    );
-                let _ = stream.write_all(response.as_bytes()).unwrap();
+            let filename = message_parts.get(1).expect(&"Missing file name");
+            let my_file = dir
+                .map(|result| result.unwrap())
+                .find(|entry| entry.file_name().to_str().unwrap().contains(filename));
+            if my_file.is_some() {
+                let file_name = my_file
+                    .expect("Could not get the file name")
+                    .file_name()
+                    .to_str()
+                    .unwrap()
+                    .to_string();
+                let dir_path = Path::new(directory_path).join(file_name);
+                let contents = fs::read_to_string(dir_path);
+                match contents {
+                    Ok(contents) => {
+                        let response = format!(
+                            "HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: {}\r\n\r\n{contents}",
+                            message_parts.len()
+                        );
+                        let _ = stream.write_all(response.as_bytes()).unwrap();
+                    }
+                    Err(..) => {
+                        let response = "HTTP/1.1 404 Not Found\r\n\r\n";
+                        let _ = stream.write_all(response.as_bytes()).unwrap();
+                    }
                 }
+            } else {
+                let response = "HTTP/1.1 404 Not Found\r\n\r\n";
+                let _ = stream.write_all(response.as_bytes()).unwrap();
             }
         }
         _ => match stream.write_all(NOT_FOUND_RESPONSE) {

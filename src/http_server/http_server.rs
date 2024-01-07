@@ -111,7 +111,7 @@ fn handle_response(request_lines: Vec<String>, mut stream: TcpStream) {
                     Ok(contents) => {
                         let response = format!(
                             "HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: {}\r\n\r\n{contents}",
-                            message_parts.len()
+                            contents.len()
                         );
                         let _ = stream.write_all(response.as_bytes()).unwrap();
                     }

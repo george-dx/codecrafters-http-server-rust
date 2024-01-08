@@ -27,7 +27,7 @@ impl HttpServer {
         for stream in listener.incoming() {
             match stream {
                 Ok(stream) => {
-                    println!("accepted new connection");
+                    println!("Accepted new connection");
                     thread::spawn(move || handle_request(stream));
                 }
                 Err(e) => {
@@ -41,13 +41,7 @@ impl HttpServer {
 fn handle_request(mut stream: TcpStream) {
     let mut stream_clone = stream.try_clone().expect("Failed to clone stream");
     let mut buffer: BufReader<&mut TcpStream> = BufReader::new(&mut stream_clone);
-    // let request_bytes_vec: Vec<String> = buffer
-        // .lines()
-        // .map(|result| result.unwrap())
-        // .take_while(|line| !line.is_empty())
-        // .collect_vec();
     let buffer_u8 = buffer.fill_buf().unwrap();
-    // println!("Requested lines: {:?}", request_bytes_vec);
     handle_response(stream, buffer_u8);
 }
 
@@ -63,7 +57,6 @@ fn handle_response(mut stream: TcpStream, buffer_u8: &[u8]) {
         .unwrap_or(&"Missing start part get path");
 
     let parts: Vec<&str> = path.split("/echo/").collect();
-    println!("{:?}", parts);
     match path {
         &"/" => match stream.write_all(OK_RESPONSE) {
             Ok(_) => (),
@@ -151,18 +144,6 @@ fn handle_response(mut stream: TcpStream, buffer_u8: &[u8]) {
                     let response = "HTTP/1.1 201 Created\r\n\r\n";
                     let _ = stream.write(response.as_bytes()).unwrap();
                 }
-                // let file_content_string = request_lines.join("\n");
-                // let file_cont = file_content_string.split("\r\n\r\n").collect_vec();
-                // println!("@@@ {:?}", request_lines);
-                // match file_cont {
-                //     Some(content) => {
-                //         println!("@@@ {:?}", file_cont);
-                //         let file_bytes = content.as_bytes();
-                //         file.write(file_bytes).expect("Could not write to file");
-                //     },
-                //     None => {
-                //     },
-                // };
             }
         }
         _ => match stream.write_all(NOT_FOUND_RESPONSE) {
